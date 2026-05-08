@@ -41,6 +41,7 @@ sample-evidence.pdf
 # tooling state
 .claude/
 CLAUDE.md
+tsconfig.tsbuildinfo
 
 # internal docs
 DoNotTrain-PRD-Final.md

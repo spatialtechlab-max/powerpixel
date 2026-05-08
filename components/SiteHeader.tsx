@@ -20,6 +20,11 @@ export function SiteHeader() {
   const pathname = usePathname();
   const toggleMenu = () => setIsOpen((v) => !v);
 
+  // Power Pixel Pro routes ("/" and "/lookup") render their own floating
+  // pill navbar. Skip the global header there so the two don't stack.
+  // The legacy blockchain route /register keeps the original header.
+  if (pathname === "/" || pathname === "/lookup") return null;
+
   return (
     <div className="pointer-events-none fixed inset-x-0 top-0 z-40 flex w-full justify-center px-4 py-4 sm:py-6">
       <div className="pointer-events-auto relative z-10 flex w-full max-w-4xl items-center justify-between gap-4 rounded-full border border-white/10 bg-bg/55 px-3 py-2 shadow-[0_8px_40px_-8px_rgba(0,0,0,0.55)] backdrop-blur-xl sm:px-4">

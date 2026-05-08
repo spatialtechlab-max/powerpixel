@@ -1,289 +1,192 @@
 "use client";
 
+/**
+ * Power Pixel Pro — full-bleed hero.
+ *
+ * Readex Pro typography, encrypted-vibe Canvas background (hex-digit rain
+ * instead of stock video), floating pill navbar with the voxel-P logo,
+ * large staggered headline ("scan / your / post"), three stat callouts,
+ * bottom gradient overlay. Pure black + white + white-opacity only.
+ */
+
+import Image from "next/image";
 import Link from "next/link";
-import { useReadContract } from "wagmi";
+import FUIBentoGridDark from "@/components/ui/bento";
 import {
-  ArrowUpRight,
-  ArrowRight,
-  CheckCircle2,
-  Server,
-  Lock,
-  Clock,
-  Globe,
-} from "lucide-react";
-import { CONTRACT_ADDRESS, DONOTTRAIN_ABI, addressUrl } from "@/lib/contract";
-import { Marquee } from "@/components/ui/Marquee";
-import { Workflow } from "@/components/Workflow";
-import { Dithering } from "@paper-design/shaders-react";
+  ContainerAnimated,
+  ContainerStagger,
+  GalleryGrid,
+  GalleryGridCell,
+} from "@/components/ui/cta-section-with-gallery";
+import { Button } from "@/components/ui/button";
 
-const HERO_VIDEO =
-  "https://videos.pexels.com/video-files/34127877/14471387_1920_1080_30fps.mp4";
-
-export default function LandingPage() {
-  const { data: total, isLoading } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: DONOTTRAIN_ABI,
-    functionName: "totalRegistrations",
-  });
-
-  const counter = isLoading ? "…" : total !== undefined ? total.toString() : "0";
-  const shortContract = `${CONTRACT_ADDRESS.slice(0, 6)}…${CONTRACT_ADDRESS.slice(-4)}`;
-
-  return (
-    <>
-      {/* HERO — full-bleed video background, asymmetric bottom-aligned headline + stats marquee */}
-      <section className="relative flex min-h-[88vh] w-full flex-col items-start justify-end overflow-hidden">
-        {/* Solid bg sits behind the video so there's no white flash before it loads */}
-        <div className="absolute inset-0 bg-bg" />
-        <video
-          className="absolute inset-0 h-full w-full object-cover scale-[1.02]"
-          src={HERO_VIDEO}
-          autoPlay
-          loop
-          muted
-          playsInline
-          preload="auto"
-          aria-hidden="true"
-        />
-        <div className="absolute inset-0 bg-bg/55" />
-        <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/50 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-r from-bg/70 via-transparent to-bg/30" />
-
-        {/* Top: status pill (pushed below the floating nav island) */}
-        <div className="relative z-10 w-full px-6 pt-44 sm:px-10 sm:pt-52 lg:px-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border-strong bg-bg/60 backdrop-blur text-[11px] tracking-wide text-text-secondary uppercase">
-            <span className="relative flex h-1.5 w-1.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-60" />
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-success" />
-            </span>
-            Live · Ethereum Sepolia
-          </div>
-        </div>
-
-        {/* Asymmetric bottom hero */}
-        <div className="relative z-10 w-full px-6 pb-20 pt-32 sm:px-10 sm:pb-28 lg:px-16 lg:pb-32">
-          <div className="flex flex-col gap-10 lg:flex-row lg:items-end">
-            <div className="w-full lg:w-3/5 space-y-7">
-              <h1 className="text-[40px] sm:text-[58px] lg:text-[72px] font-medium leading-[1.04] tracking-tightest text-text-primary">
-                An on-chain registry for{" "}
-                <span className="serif italic text-text-primary">work that should not</span>{" "}
-                be used to train AI.
-              </h1>
-              <div className="flex flex-wrap items-center gap-3">
-                <Link
-                  href="/register"
-                  className="group inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-text-primary text-bg text-[14px] font-medium hover:bg-white transition"
-                >
-                  Register a work
-                  <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-0.5" />
-                </Link>
-                <Link
-                  href="/lookup"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md border border-border-strong bg-bg/40 backdrop-blur text-text-primary text-[14px] hover:border-text-secondary hover:bg-surface transition"
-                >
-                  Look up a hash
-                </Link>
-                <a
-                  href={addressUrl(CONTRACT_ADDRESS)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="ml-1 inline-flex items-center gap-1.5 px-3 py-2.5 text-[13px] text-text-secondary hover:text-text-primary transition"
-                >
-                  View contract
-                  <ArrowUpRight className="h-3.5 w-3.5" />
-                </a>
-              </div>
-            </div>
-            <div className="w-full lg:w-2/5 lg:pb-2">
-              <p className="serif italic text-[18px] sm:text-[22px] lg:text-[24px] leading-[1.4] text-text-secondary lg:text-right">
-                A creator drops a file. The browser fingerprints it. One signature on Ethereum
-                produces an unforgeable, court-admissible record of prior notice, without ever
-                uploading the work itself.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Stats marquee — full-bleed band sitting BELOW the hero */}
-      <StatsMarquee counter={counter} shortContract={shortContract} />
-
-      {/* WORKFLOW — Blog7-style three-card layout */}
-      <Workflow />
-
-      <Hairline />
-
-      {/* WHY BLOCKCHAIN — dithered shader on the left, reasons table on the right */}
-      <section className="max-w-7xl mx-auto px-6 py-28">
-        <div className="grid lg:grid-cols-[5fr_7fr] gap-10 items-stretch">
-          {/* LEFT — dithered shader panel with kicker overlay */}
-          <div className="relative rounded-xl border border-border overflow-hidden min-h-[380px] lg:min-h-[560px]">
-            <div className="absolute inset-0">
-              <Dithering
-                style={{ height: "100%", width: "100%" }}
-                colorBack="hsl(232, 25%, 6%)"
-                colorFront="hsl(232, 80%, 78%)"
-                shape="sphere"
-                type="4x4"
-                pxSize={2}
-                offsetX={0}
-                offsetY={0}
-                scale={0.85}
-                rotation={0}
-                speed={0.18}
-              />
-            </div>
-            {/* Bottom gradient so the text is readable */}
-            <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/40 to-transparent" />
-
-            <div className="relative z-10 h-full flex flex-col justify-end p-8 lg:p-10">
-              <span className="inline-flex items-center px-3 py-1 rounded-full border border-white/10 bg-bg/50 backdrop-blur text-[10px] mono uppercase tracking-[0.2em] text-text-secondary mb-5 self-start">
-                The vault
-              </span>
-              <h2 className="text-[36px] sm:text-[44px] lg:text-[52px] leading-[1.05] tracking-tight font-medium text-text-primary">
-                Why blockchain.
-              </h2>
-              <p className="mt-4 text-[15px] text-text-secondary leading-relaxed max-w-md">
-                A normal database can serve lookups. The blockchain isn't the user interface. It's
-                the vault. Four properties only a public chain provides.
-              </p>
-            </div>
-          </div>
-
-          {/* RIGHT — reasons grid (the table you liked) */}
-          <div className="grid sm:grid-cols-2 gap-px bg-border rounded-xl overflow-hidden border border-border">
-            {REASONS.map((r) => (
-              <div key={r.title} className="bg-bg p-9 lg:p-10 flex flex-col gap-5">
-                <div className="h-12 w-12 rounded-xl border border-border-strong bg-surface/60 flex items-center justify-center">
-                  <r.Icon className="h-6 w-6 text-text-primary" strokeWidth={1.5} />
-                </div>
-                <div>
-                  <h3 className="text-[20px] font-medium text-text-primary tracking-tight">{r.title}</h3>
-                  <p className="mt-3 text-[14px] text-text-secondary leading-[1.65]">{r.body}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <Hairline />
-
-      {/* HONEST FRAMING */}
-      <section className="max-w-4xl mx-auto px-6 py-28 text-center">
-        <p className="text-[11px] mono uppercase tracking-[0.2em] text-text-tertiary">
-          Honest scope
-        </p>
-        <h2 className="mt-4 serif text-[32px] sm:text-[44px] leading-[1.15] text-text-primary">
-          A notice board, not a filter.
-        </h2>
-        <p className="mt-6 text-[15px] text-text-secondary leading-[1.7] max-w-2xl mx-auto">
-          We do not detect infringement. We do not block training. But the on-chain record is
-          unforgeable. If an AI lab trains on registered work afterward, the timestamp converts an
-          "oops" defense into willful infringement, which unlocks higher damages in many
-          jurisdictions.
-        </p>
-      </section>
-
-      <Hairline />
-
-      {/* CONTRACT FOOTER */}
-      <section className="max-w-6xl mx-auto px-6 py-20">
-        <div className="rounded-lg border border-border bg-surface p-7">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
-            <div>
-              <div className="flex items-center gap-2 text-[11px] mono uppercase tracking-wider text-success mb-3">
-                <CheckCircle2 className="h-3 w-3" strokeWidth={2.5} />
-                Live registry contract
-              </div>
-              <div className="mono text-[12px] sm:text-[13px] break-all text-text-primary">
-                {CONTRACT_ADDRESS}
-              </div>
-              <p className="text-[12px] text-text-tertiary mt-1">Ethereum Sepolia testnet</p>
-            </div>
-            <a
-              href={addressUrl(CONTRACT_ADDRESS)}
-              target="_blank"
-              rel="noreferrer"
-              className="shrink-0 self-start sm:self-end inline-flex items-center gap-1.5 px-4 py-2 rounded-md border border-border-strong text-[13px] text-text-primary hover:bg-surface-2 transition"
-            >
-              Verify on Etherscan
-              <ArrowUpRight className="h-3.5 w-3.5" />
-            </a>
-          </div>
-        </div>
-      </section>
-    </>
-  );
-}
-
-/* ---------- Stats marquee ---------- */
-
-function StatsMarquee({ counter, shortContract }: { counter: string; shortContract: string }) {
-  const items = [
-    { label: "Works registered", value: counter },
-    { label: "Network", value: "Ethereum Sepolia" },
-    { label: "Cost per registration", value: "Free" },
-    { label: "Storage", value: "On-chain (forever)" },
-    { label: "Contract", value: shortContract },
-    { label: "Verifiable on", value: "Etherscan" },
-  ];
-
-  return (
-    <div className="border-y border-border bg-bg/60 backdrop-blur-sm py-3">
-      <Marquee durationSeconds={45} repeat={3} className="text-text-primary">
-        {items.map((it) => (
-          <div className="flex items-center gap-3 whitespace-nowrap px-4" key={it.label}>
-            <span className="font-medium font-mono text-[13px] tracking-wide text-text-primary">
-              {it.value}
-            </span>
-            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-text-tertiary">
-              {it.label}
-            </span>
-            <span className="text-text-tertiary text-[10px] mono ml-2">·</span>
-          </div>
-        ))}
-      </Marquee>
-    </div>
-  );
-}
-
-/* ---------- helpers ---------- */
-
-function Hairline() {
-  return <div className="hairline" />;
-}
-
-function SectionLabel({ kicker, title }: { kicker: string; title: string }) {
-  return (
-    <>
-      <p className="text-[11px] mono uppercase tracking-[0.2em] text-text-tertiary">{kicker}</p>
-      <h2 className="mt-4 text-[36px] sm:text-[44px] leading-[1.1] tracking-tight font-medium text-text-primary">
-        {title}
-      </h2>
-    </>
-  );
-}
-
-const REASONS = [
-  {
-    title: "Survives the issuer",
-    body: "Records persist across thousands of independent nodes. We cannot lose them, and we cannot take them down.",
-    Icon: Server,
-  },
-  {
-    title: "Resists pressure",
-    body: "No admin can silently delete records under a subpoena, an acquisition, or a settlement.",
-    Icon: Lock,
-  },
-  {
-    title: "Trust-minimized timestamps",
-    body: "Block timestamps are set by Ethereum consensus, not by us, not by the registrant.",
-    Icon: Clock,
-  },
-  {
-    title: "Verifiable by strangers",
-    body: "AI labs and courts can verify directly on Etherscan without trusting our website.",
-    Icon: Globe,
-  },
+const NAV_LINKS: { label: string; href: string }[] = [
+  { label: "home", href: "/" },
+  { label: "register", href: "/register" },
+  { label: "lookup", href: "/lookup" },
+  { label: "support", href: "#support" },
 ];
+
+// Local UHD hero video. Served from /public for now; for production this
+// should move to a CDN / Vercel Blob — 97 MB shouldn't ship in the repo.
+const HERO_VIDEO = "/hero.mp4";
+
+export default function HomePage() {
+  return (
+    <>
+    <section className="relative h-screen w-full overflow-hidden bg-black">
+      {/* Encrypted-vibe background video */}
+      <video
+        className="absolute inset-0 h-full w-full object-cover"
+        autoPlay
+        loop
+        muted
+        playsInline
+        src={HERO_VIDEO}
+      />
+      {/* Subtle vignette so the headlines stay legible over the video */}
+      <div className="pointer-events-none absolute inset-0 bg-black/45" aria-hidden="true" />
+
+      {/* Floating pill navbar */}
+      <nav className="absolute left-0 right-0 top-0 z-20 flex items-center justify-between gap-4 px-6 pt-6 md:px-10">
+        {/* Brand pill — voxel-P logo */}
+        <div className="flex items-center gap-2 rounded-full bg-white/[0.06] py-2.5 pl-3 pr-6 backdrop-blur-2xl backdrop-saturate-150 ring-1 ring-inset ring-white/10">
+          <Image
+            src="/powerpixel-mark.png"
+            alt="Power Pixel Pro"
+            width={28}
+            height={28}
+            priority
+            className="h-7 w-7 object-contain"
+          />
+          <span className="text-sm font-normal tracking-tight text-white">powerpixel</span>
+        </div>
+
+        {/* Center pill — links */}
+        <div className="hidden items-center gap-1 rounded-full bg-white/[0.06] px-3 py-2 backdrop-blur-2xl backdrop-saturate-150 ring-1 ring-inset ring-white/10 md:flex">
+          {NAV_LINKS.map(({ label, href }) => (
+            <a
+              key={label}
+              href={href}
+              className="rounded-full px-5 py-2 text-sm text-neutral-300 transition-colors hover:text-white"
+            >
+              {label}
+            </a>
+          ))}
+        </div>
+
+        {/* Right CTA */}
+        <Link
+          href="/register"
+          className="rounded-full bg-white px-6 py-3 text-sm font-normal text-black transition-colors hover:bg-neutral-200"
+        >
+          connect wallet
+        </Link>
+      </nav>
+
+      {/* Foreground content */}
+      <div className="relative h-full w-full">
+        {/* Staggered headline */}
+        <h1 className="hero-title absolute left-4 top-[18%] text-[14vw] font-medium text-white md:left-10 md:text-[13vw]">
+          scan
+        </h1>
+        <h1 className="hero-title absolute right-4 top-[38%] text-[14vw] font-medium text-white md:right-10 md:text-[13vw]">
+          your
+        </h1>
+        <h1 className="hero-title absolute left-[18%] top-[58%] text-[14vw] font-medium text-white md:left-[28%] md:text-[13vw]">
+          post
+        </h1>
+
+        {/* Description */}
+        <p className="absolute left-6 top-[46%] max-w-[240px] text-[15px] leading-snug text-white/90 md:left-10">
+          we check every image for ai-generation signatures, brand logos, and
+          hidden watermarks before it ever leaves your hands.
+        </p>
+
+        {/* Top-right stat */}
+        <div className="absolute right-6 top-[14%] md:right-24">
+          <div className="flex items-center justify-end gap-3">
+            <span className="hidden h-px w-24 rotate-[20deg] bg-white/40 md:block" />
+            <span className="text-4xl font-medium tracking-tight md:text-5xl">+65k</span>
+          </div>
+          <div className="mt-1 text-right text-xs text-white/70 md:text-sm">creators use</div>
+        </div>
+
+        {/* Bottom gradient overlay */}
+        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-b from-transparent to-black" />
+
+        {/* Bottom-left stat */}
+        <div className="absolute bottom-20 left-6 md:bottom-24 md:left-20">
+          <div className="flex items-center gap-3">
+            <span className="text-4xl font-medium tracking-tight md:text-5xl">+1.5b</span>
+            <span className="hidden h-px w-24 -rotate-[20deg] bg-white/40 md:block" />
+          </div>
+          <div className="mt-1 text-xs text-white/70 md:text-sm">px scanned</div>
+        </div>
+
+        {/* Bottom-right stat */}
+        <div className="absolute bottom-16 right-6 md:bottom-20 md:right-20">
+          <div className="flex items-center justify-end gap-3">
+            <span className="hidden h-px w-24 -rotate-[20deg] bg-white/40 md:block" />
+            <span className="text-4xl font-medium tracking-tight md:text-5xl">+300k</span>
+          </div>
+          <div className="mt-1 text-right text-xs text-white/70 md:text-sm">images cleared</div>
+        </div>
+      </div>
+    </section>
+
+    {/* "How it works" — five-signal Bento grid */}
+    <FUIBentoGridDark />
+
+    {/* Closing CTA — staggered-text + asymmetric 4-image gallery
+        (wrapped in the same container shell as the bento above so the
+        left edges align across sections) */}
+    <section className="bg-black">
+      <div className="container mx-auto p-6 py-24 md:p-10 md:py-32">
+        <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-2">
+        <ContainerStagger>
+          <ContainerAnimated className="mb-3 text-sm uppercase tracking-[0.28em] text-white/70 md:text-base">
+            ready when you are
+          </ContainerAnimated>
+          <ContainerAnimated className="hero-title text-3xl font-medium tracking-tight text-white md:text-5xl">
+            Make every post defensible.
+          </ContainerAnimated>
+          <ContainerAnimated className="mt-2 bg-gradient-to-br from-white to-white/40 bg-clip-text text-2xl/8 font-medium tracking-tight text-transparent">
+            Drop an image. We screen it for everything that gets people in
+            trouble — AI provenance, popular brands, hidden stock marks. The
+            work that&apos;s yours moves on. The work that isn&apos;t gets caught
+            before it ships.
+          </ContainerAnimated>
+          <ContainerAnimated className="mt-8">
+            <a href="/lookup">
+              <Button className="bg-white text-black hover:bg-neutral-200">
+                Scan an image
+              </Button>
+            </a>
+          </ContainerAnimated>
+        </ContainerStagger>
+
+        <GalleryGrid>
+          {[
+            "https://images.unsplash.com/photo-1455849318743-b2233052fcff?q=80&w=2338&auto=format&fit=crop",
+            "https://images.unsplash.com/photo-1733680958774-39a0e8a64a54?q=80&w=2487&auto=format&fit=crop",
+            "https://images.unsplash.com/photo-1548783307-f63adc3f200b?q=80&w=2487&auto=format&fit=crop",
+            "https://images.unsplash.com/photo-1703622377707-29bc9409aaf2?q=80&w=2400&auto=format&fit=crop",
+          ].map((src, i) => (
+            <GalleryGridCell index={i} key={i}>
+              <img
+                src={src}
+                alt=""
+                className="size-full object-cover object-center"
+                width="100%"
+                height="100%"
+              />
+            </GalleryGridCell>
+          ))}
+        </GalleryGrid>
+        </div>
+      </div>
+    </section>
+    </>
+  );
+}

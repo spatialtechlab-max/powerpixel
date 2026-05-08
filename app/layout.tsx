@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
 import { SiteHeader } from "@/components/SiteHeader";
-import { addressUrl, CONTRACT_ADDRESS } from "@/lib/contract";
+import { HomeBodyClass } from "@/components/HomeBodyClass";
+import { SiteFooter } from "@/components/SiteFooter";
 
 export const metadata: Metadata = {
-  title: "DoNotTrain · On-chain registry for AI training opt-out",
+  title: "Power Pixel Pro · The IP check before you post",
   description:
-    "Court-admissible, on-chain proof of prior notice. Register a hash of your work in seconds. Free, global, uncensorable.",
+    "Drop an image. We scan for AI-generation signatures, popular brand logos, and hidden stock-preview watermarks before you ever publish. Five signals, one verdict.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -15,31 +16,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         <Providers>
+          <HomeBodyClass />
           <SiteHeader />
           <main className="min-h-screen">{children}</main>
-          <footer className="border-t border-border/60 mt-12 py-10">
-            <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-[12px] text-text-tertiary">
-              <div>DoNotTrain · On-chain opt-out registry</div>
-              <div className="flex items-center gap-5">
-                <a
-                  href={addressUrl(CONTRACT_ADDRESS)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="hover:text-text-primary transition"
-                >
-                  Etherscan
-                </a>
-                <a
-                  href="https://github.com"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="hover:text-text-primary transition"
-                >
-                  GitHub
-                </a>
-              </div>
-            </div>
-          </footer>
+          <SiteFooter />
         </Providers>
       </body>
     </html>

@@ -1,18 +1,33 @@
 "use client";
 
-import "@rainbow-me/rainbowkit/styles.css";
-import { RainbowKitProvider, darkTheme } from "@rainbow-me/rainbowkit";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useEffect, useState, type ReactNode } from "react";
-import { WagmiProvider } from "wagmi";
-import { wagmiConfig } from "@/lib/wagmi";
+import { useEffect, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
+import dynamic from "next/dynamic";
 
 /**
- * Silence the noisy unhandled rejections from WalletConnect's WebSocket layer.
- * "Connection interrupted while trying to subscribe" is transient (happens when
- * the WC relay drops/reconnects) and does not affect wallet connectivity. In dev
- * Next.js shows it as a full-screen overlay; in prod it's a console warning at
- * worst. We swallow only this specific message — anything else still surfaces.
+ * Wallet routes get the full Wagmi/RainbowKit tree. Everything else
+ * (Power Pixel Pro hero + scan flow) renders children directly with no
+ * wallet imports executed — that's how we avoid the WalletConnect WS
+ * subscribe runtime error on the new product surface.
+ *
+ * `next/dynamic` defers the import of WalletProviders (and therefore
+ * `lib/wagmi`, which initializes WalletConnect at module load) until the
+ * router lands on a wallet route. Module side effects don't fire until
+ * then.
+ */
+const WalletProviders = dynamic(() => import("./WalletProviders"), {
+  ssr: false,
+});
+
+// /lookup is now the Power Pixel Pro scan page (no wallet). Only the
+// legacy /register page still mounts the wallet provider tree.
+const WALLET_ROUTES = new Set(["/register"]);
+
+/**
+ * Backstop suppressor for any WalletConnect noise that does manage to
+ * leak through. Caught both as a Promise rejection and as a synchronous
+ * Error event, with capture-phase listening so it runs before Next.js's
+ * dev overlay.
  */
 function useSuppressWalletConnectNoise() {
   useEffect(() => {
@@ -20,39 +35,40 @@ function useSuppressWalletConnectNoise() {
       /Connection interrupted while trying to subscribe/i,
       /Connection failed or socket disconnected/i,
       /pingTimeoutMs/i,
+      /WebSocket connection closed abnormally/i,
+      /relayer\.publish/i,
     ];
+    const matches = (msg: string) => noise.some((re) => re.test(msg));
 
-    const handler = (event: PromiseRejectionEvent) => {
+    const onRejection = (event: PromiseRejectionEvent) => {
       const msg = String(event.reason?.message ?? event.reason ?? "");
-      if (noise.some((re) => re.test(msg))) {
+      if (matches(msg)) event.preventDefault();
+    };
+    const onError = (event: ErrorEvent) => {
+      const msg = String(event.error?.message ?? event.message ?? "");
+      if (matches(msg)) {
         event.preventDefault();
+        event.stopImmediatePropagation();
       }
     };
 
-    window.addEventListener("unhandledrejection", handler);
-    return () => window.removeEventListener("unhandledrejection", handler);
+    window.addEventListener("unhandledrejection", onRejection);
+    window.addEventListener("error", onError, true);
+    return () => {
+      window.removeEventListener("unhandledrejection", onRejection);
+      window.removeEventListener("error", onError, true);
+    };
   }, []);
 }
 
 export function Providers({ children }: { children: ReactNode }) {
   useSuppressWalletConnectNoise();
-  const [queryClient] = useState(() => new QueryClient());
+  const pathname = usePathname();
 
-  return (
-    <WagmiProvider config={wagmiConfig}>
-      <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider
-          theme={darkTheme({
-            accentColor: "#ECEEF2",          // white-ish, matches our primary CTA
-            accentColorForeground: "#0a0b0f", // dark text on white
-            borderRadius: "medium",
-            fontStack: "system",
-            overlayBlur: "small",
-          })}
-        >
-          {children}
-        </RainbowKitProvider>
-      </QueryClientProvider>
-    </WagmiProvider>
-  );
+  if (!WALLET_ROUTES.has(pathname)) {
+    // Power Pixel Pro routes: do not load wallet code at all.
+    return <>{children}</>;
+  }
+
+  return <WalletProviders>{children}</WalletProviders>;
 }

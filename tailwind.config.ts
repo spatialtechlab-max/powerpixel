@@ -22,6 +22,19 @@ const config: Config = {
         success: "#10b981",
         warning: "#f59e0b",
         danger: "#ef4444",
+        // shadcn semantic tokens for components/ui/*. Don't collide with
+        // existing literal tokens above (no `border` / `accent` overrides).
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        ring: "hsl(var(--ring))",
       },
       fontFamily: {
         sans: ["Inter", "ui-sans-serif", "system-ui"],

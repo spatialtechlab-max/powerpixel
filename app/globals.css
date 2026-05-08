@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=JetBrains+Mono:wght@400;500&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=JetBrains+Mono:wght@400;500&family=Readex+Pro:wght@300;400;500;600;700&display=swap");
 
 :root {
   color-scheme: dark;
@@ -81,4 +81,39 @@ a {
 }
 .marquee:hover .marquee-track {
   animation-play-state: paused;
+}
+
+/* ----- Power Pixel Pro hero ----- */
+.hero-title {
+  font-family: "Readex Pro", system-ui, -apple-system, sans-serif;
+  letter-spacing: -0.04em;
+  line-height: 0.95;
+}
+
+/* On the home route the hero owns the page; force a black canvas
+   regardless of the global dark theme tokens. */
+body.is-home {
+  background-color: #000;
+  color: #fff;
+  font-family: "Readex Pro", system-ui, -apple-system, sans-serif;
+}
+/* Allow vertical scroll on the home route since the page now extends past
+   the hero into the "three steps" section. */
+body.is-home {
+  min-height: 100%;
+}
+
+/* shadcn-style HSL design tokens. Additive — existing literal-color tokens
+   in tailwind.config.ts are untouched, so /register and /lookup keep their
+   current styling. These power the new components/ui/* (button, hero-section,
+   bento). */
+:root {
+  --background: 0 0% 0%;
+  --foreground: 0 0% 98%;
+  --primary: 0 0% 100%;
+  --primary-foreground: 0 0% 4%;
+  --muted: 0 0% 8%;
+  --muted-foreground: 0 0% 70%;
+  --ring: 232 76% 67%;
+  --border-token: 0 0% 18%;
 }

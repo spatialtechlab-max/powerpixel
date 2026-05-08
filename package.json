@@ -12,9 +12,8 @@
     "test": "hardhat test"
   },
   "dependencies": {
-    "@contentauth/c2pa-web": "^0.8.1",
+    "@contentauth/c2pa-node": "^0.5.5",
     "@gsap/react": "^2.1.2",
-    "@huggingface/transformers": "^4.2.0",
     "@paper-design/shaders-react": "^0.0.76",
     "@radix-ui/react-slot": "^1.2.4",
     "@rainbow-me/rainbowkit": "^2.1.6",
@@ -27,12 +26,12 @@
     "next": "14.2.15",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "sharp": "^0.34.5",
     "tailwind-merge": "^3.5.0",
     "viem": "^2.21.19",
     "wagmi": "^2.12.17"
   },
   "devDependencies": {
-    "@contentauth/c2pa-node": "^0.5.5",
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.7",
     "@nomicfoundation/hardhat-ethers": "^3.0.8",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",

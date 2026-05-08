@@ -7,12 +7,10 @@ import { useAccount, useChainId, useWaitForTransactionReceipt, useWriteContract 
 import { sepolia } from "wagmi/chains";
 import { Loader2, ArrowUpRight, ShieldAlert, Copy, Check } from "lucide-react";
 
-import { AIDetectionPanel } from "@/components/AIDetectionPanel";
 import { FileDropZone } from "@/components/FileDropZone";
 import { HashDisplay } from "@/components/HashDisplay";
 import { NetworkSwitcher } from "@/components/NetworkSwitcher";
 import { RegistrationCard } from "@/components/RegistrationCard";
-import { detectAI, preloadAIDetector, type AIDetectionResult } from "@/lib/aiDetect";
 import { CONTRACT_ADDRESS, DONOTTRAIN_ABI, addressUrl, txUrl } from "@/lib/contract";
 import { isImage, sha256OfFile } from "@/lib/hash";
 import { hamming, PHASH_ZERO, phashOfImage } from "@/lib/phash";
@@ -57,16 +55,10 @@ export default function RegisterPage() {
   const [retryNonce, setRetryNonce] = useState(0);
   const retryChecks = () => setRetryNonce((n) => n + 1);
 
-  // AI-generation gate. Runs ONLY after the registry checks above have cleared
-  // the file (no exact match, no perceptually similar prior work). The model
-  // weights begin downloading earlier, on file drop, so by the time we reach
-  // this stage they are usually already cached in IndexedDB.
-  type AIState = "idle" | "running" | "human" | "ai" | "error";
-  const [aiState, setAiState] = useState<AIState>("idle");
-  const [aiResult, setAiResult] = useState<AIDetectionResult | null>(null);
-  const [aiError, setAiError] = useState<string | null>(null);
-  const [aiRetryNonce, setAiRetryNonce] = useState(0);
-  const retryAICheck = () => setAiRetryNonce((n) => n + 1);
+  // The browser-side AI-detection gate that used to live here was retired —
+  // its replacement (the new Power Pixel Pro server-side scan) lives at
+  // /lookup. /register is now blockchain-registration only; if you need an
+  // AI / brand / watermark check before registering, scan first via /lookup.
 
   useEffect(() => {
     if (status.kind !== "ready" || !sha256 || !pHash) {
@@ -152,68 +144,14 @@ export default function RegisterPage() {
 
   const hasPriorNotice = !!priorMatchSha && !!priorMatch;
 
-  // AI-generation gate. Last barrier before Register is enabled.
-  // Fires once registry checks have cleared (file is neither already
-  // registered nor perceptually similar to a prior work). Non-image files
-  // bypass the model — the detector only handles images, and the existing
-  // pHash skip already flags them.
-  useEffect(() => {
-    if (status.kind !== "ready" || !file) return;
-    if (!allChecksComplete) return;
-    if (alreadyExists || hasPriorNotice) return;
-
-    if (skippedPHash) {
-      setAiState("human");
-      setAiResult(null);
-      setAiError(null);
-      return;
-    }
-
-    let cancelled = false;
-    setAiState("running");
-    setAiResult(null);
-    setAiError(null);
-
-    (async () => {
-      try {
-        const result = await detectAI(file);
-        if (cancelled) return;
-        setAiResult(result);
-        setAiState(result.verdict === "ai" ? "ai" : "human");
-      } catch (e) {
-        if (cancelled) return;
-        setAiError(e instanceof Error ? e.message : String(e));
-        setAiState("error");
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    status.kind,
-    file,
-    allChecksComplete,
-    alreadyExists,
-    hasPriorNotice,
-    skippedPHash,
-    aiRetryNonce,
-  ]);
-
   useEffect(() => {
     if (!file) return;
     let cancelled = false;
-    // Kick off AI-detector model downloads in parallel with hashing. By the
-    // time prior-notice checks clear, the model is usually warm in IndexedDB.
-    preloadAIDetector();
     (async () => {
       setStatus({ kind: "hashing" });
       setSha256(null);
       setPHash(null);
       setSkippedPHash(false);
-      setAiState("idle");
-      setAiResult(null);
-      setAiError(null);
       reset();
       try {
         const sha = await sha256OfFile(file);
@@ -266,9 +204,7 @@ export default function RegisterPage() {
       !!sha256 &&
       !!pHash &&
       // Hard gate: a perceptually-similar work is already on-chain → blocked.
-      !hasPriorNotice &&
-      // Hard gate: file passed the in-browser AI-generation classifier.
-      aiState === "human",
+      !hasPriorNotice,
     [
       isConnected,
       onSepolia,
@@ -278,7 +214,6 @@ export default function RegisterPage() {
       sha256,
       pHash,
       hasPriorNotice,
-      aiState,
     ]
   );
 
@@ -406,52 +341,17 @@ export default function RegisterPage() {
               />
             )}
 
-            {/* AI-generation gate — final check before Register is enabled.
-                Runs Content Credentials + pixel classifier locally. Hard-blocks
-                if either signal flags AI authorship. Skipped for non-images. */}
+            {/* Register button — gated only on the registry checks above.
+                The browser-side AI gate that used to live here has been
+                retired in favour of the standalone scan flow at /lookup. */}
             {status.kind === "ready" && allChecksComplete && !alreadyExists && !hasPriorNotice && (
-              <>
-                {aiState === "running" && (
-                  <div className="mt-6 flex items-center gap-2 text-[12px] text-text-tertiary">
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                    Scanning for AI-generation signatures (Content Credentials + pixel classifier)…
-                  </div>
-                )}
-
-                {aiState === "ai" && aiResult && <AIDetectionPanel result={aiResult} />}
-
-                {aiState === "error" && (
-                  <div className="mt-6 rounded-md border border-warning/40 bg-warning/5 p-4">
-                    <div className="text-[13px] font-medium text-text-primary">
-                      AI detector unavailable
-                    </div>
-                    {aiError && (
-                      <p className="text-[10px] mono text-warning mt-1 break-all">{aiError}</p>
-                    )}
-                    <p className="text-[12px] text-text-secondary mt-2 leading-relaxed">
-                      The in-browser AI detector failed to load or run. Registration is
-                      paused until it succeeds. This is usually a transient network issue
-                      while the model weights download.
-                    </p>
-                    <button
-                      onClick={retryAICheck}
-                      className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border-strong bg-surface hover:bg-surface-2 text-[12px] text-text-primary transition"
-                    >
-                      Retry AI check
-                    </button>
-                  </div>
-                )}
-
-                {aiState === "human" && (
-                  <button
-                    onClick={submit}
-                    disabled={!canSubmit}
-                    className="mt-7 inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-text-primary text-bg text-[14px] font-medium hover:bg-white transition disabled:opacity-30 disabled:cursor-not-allowed"
-                  >
-                    Register on-chain
-                  </button>
-                )}
-              </>
+              <button
+                onClick={submit}
+                disabled={!canSubmit}
+                className="mt-7 inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-text-primary text-bg text-[14px] font-medium hover:bg-white transition disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                Register on-chain
+              </button>
             )}
           </div>
         )}

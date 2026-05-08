@@ -5,8 +5,9 @@ import { addressUrl, CONTRACT_ADDRESS } from "@/lib/contract";
 
 export function SiteFooter() {
   const pathname = usePathname();
-  // The Power Pixel Pro routes are full-bleed dark canvas and self-contained.
-  if (pathname === "/" || pathname === "/lookup") return null;
+  // Symmetric with SiteHeader — only mount on the legacy /register page.
+  // The new product surfaces (/, /lookup) are full-bleed and self-contained.
+  if (pathname !== "/register") return null;
 
   return (
     <footer className="border-t border-border/60 mt-12 py-10">

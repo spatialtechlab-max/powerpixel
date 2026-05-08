@@ -20,10 +20,14 @@ export function SiteHeader() {
   const pathname = usePathname();
   const toggleMenu = () => setIsOpen((v) => !v);
 
-  // Power Pixel Pro routes ("/" and "/lookup") render their own floating
-  // pill navbar. Skip the global header there so the two don't stack.
-  // The legacy blockchain route /register keeps the original header.
-  if (pathname === "/" || pathname === "/lookup") return null;
+  // SiteHeader uses RainbowKit's ConnectButton which calls wagmi's
+  // useConfig() — that requires WagmiProvider in scope. WagmiProvider
+  // ONLY mounts on /register (see app/providers.tsx WALLET_ROUTES). So
+  // SiteHeader can only render on /register. Anywhere else (/, /lookup,
+  // /_not-found, etc.) we'd crash with `useConfig must be used within
+  // WagmiProvider` — including during static generation in the Vercel
+  // build.
+  if (pathname !== "/register") return null;
 
   return (
     <div className="pointer-events-none fixed inset-x-0 top-0 z-40 flex w-full justify-center px-4 py-4 sm:py-6">

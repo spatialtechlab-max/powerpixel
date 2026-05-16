@@ -19,9 +19,14 @@ const WalletProviders = dynamic(() => import("./WalletProviders"), {
   ssr: false,
 });
 
-// /lookup is now the Power Pixel Pro scan page (no wallet). Only the
-// legacy /register page still mounts the wallet provider tree.
-const WALLET_ROUTES = new Set(["/register"]);
+// Wallet provider tree mounts on:
+//   - /        — Power Pixel Pro marketing surface, navbar "connect wallet"
+//   - /lookup  — Power Pixel Pro post-scan "Sign on Ethereum" attestation
+//   - /register — legacy DoNotTrain blockchain registration (untouched)
+// All three are isolated products / surfaces. They share only the
+// WalletConnect Project ID (pure plumbing) — no shared contract, no shared
+// event, no shared ABI.
+const WALLET_ROUTES = new Set(["/", "/lookup", "/register"]);
 
 /**
  * Backstop suppressor for any WalletConnect noise that does manage to

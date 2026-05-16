@@ -37,6 +37,7 @@ yarn-error.log*
 
 # generated artifacts
 sample-evidence.pdf
+sample-ppp-receipt.pdf
 
 # tooling state
 .claude/

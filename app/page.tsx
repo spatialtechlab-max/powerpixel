@@ -10,7 +10,6 @@
  */
 
 import Image from "next/image";
-import Link from "next/link";
 import FUIBentoGridDark from "@/components/ui/bento";
 import {
   ContainerAnimated,
@@ -19,10 +18,13 @@ import {
   GalleryGridCell,
 } from "@/components/ui/cta-section-with-gallery";
 import { Button } from "@/components/ui/button";
+import { WalletPill } from "@/components/WalletPill";
 
+// Power Pixel Pro navigation only. /register belongs to the legacy
+// DoNotTrain product and is intentionally NOT linked from here — the two
+// products share the codebase but not the user surface.
 const NAV_LINKS: { label: string; href: string }[] = [
   { label: "home", href: "/" },
-  { label: "register", href: "/register" },
   { label: "lookup", href: "/lookup" },
   { label: "support", href: "#support" },
 ];
@@ -75,13 +77,8 @@ export default function HomePage() {
           ))}
         </div>
 
-        {/* Right CTA */}
-        <Link
-          href="/register"
-          className="rounded-full bg-white px-6 py-3 text-sm font-normal text-black transition-colors hover:bg-neutral-200"
-        >
-          connect wallet
-        </Link>
+        {/* Right CTA — real wallet connect (RainbowKit modal) */}
+        <WalletPill />
       </nav>
 
       {/* Foreground content */}
